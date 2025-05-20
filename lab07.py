@@ -20,7 +20,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 2. Загрузка весов нейронной сети
     print('\nЗагрузка весов нейронной сети')
@@ -30,7 +30,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 3. Алгоритм прямого распространения
     p = predict(X, Theta1, Theta2)
@@ -40,7 +40,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 4. Предсказание нейронной сетью случайных цифр
     indices = np.random.permutation(X.shape[0])
@@ -58,7 +58,7 @@ def main():
 def sigmoid(z):
     g = np.zeros(z.shape)
     # ------ добавьте свой код --------
-    # ...  
+    g = 1 / (1 + np.exp(-z))
     # ---------------------------------
     return g
 
@@ -68,23 +68,37 @@ def predict(X, Theta1, Theta2):
     m = X.shape[0]
     num_labels = Theta2.shape[0]
     p = np.zeros(m, dtype=int)
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+
+    # Добавляем столбец единиц для интерсепта в первый слой
+    X = np.hstack((np.ones((m, 1)), X))  # Добавляем единичный столбец
+    # Прямое распространение от входного слоя к скрытому слою
+    z2 = np.dot(X, Theta1.T)
+    a2 = sigmoid(z2)
+    # Добавляем столбец единиц для интерсепта во второй слой
+    a2 = np.hstack((np.ones((m, 1)), a2))  # Добавляем единичный столбец
+    # Прямое распространение от скрытого слоя к выходному слою
+    z3 = np.dot(a2, Theta2.T)
+    a3 = sigmoid(z3)
+    # Получаем индексы классов, соответствующие максимальным значениям выходного слоя
+    p = np.argmax(a3, axis=1)  # Индексы начинаются с 0
     return p
 
 
 # Отображение обучающего набора
 def display_data(X, width, height, el_width, el_height):
     plt.figure()
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    for i in range(height):
+        for j in range(width):
+            el = X[i * height + j].reshape(el_height, el_width).T
+            row = np.hstack((row, el)) if j > 0 else el
+        fig = np.vstack((fig, row)) if i > 0 else row
+    plt.imshow(fig)
     plt.show()
+    # plt.pause(10)
 
 
 if __name__ == '__main__':
-    plt.ion()
+    # plt.ion()
     main()
     input('Перейдите в терминал и нажмите Enter для завершения')
     plt.clf()
