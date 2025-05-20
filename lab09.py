@@ -18,7 +18,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 2. Функция стоимости регуляризованной линейной регрессии
     X1 = np.hstack((np.ones((m, 1)), X))
@@ -30,7 +30,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 3. Функция градиента регуляризованной линейной регрессии
     grad = gradient_function(theta, X1, y, lamb)
@@ -39,7 +39,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 4. Обучение регуляризованной линейной регрессии 
     print('\nОбучение модели')
@@ -52,7 +52,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 5. Построение и отображение кривых обучения
     print('\nПостроение кривых обучения')
@@ -172,7 +172,9 @@ def display_data(X, y, theta=None):
     # ------ добавьте свой код --------
 
     # Для шага 1: добавьте отображение обучающей выборки
-    # ...
+    plt.scatter(X, y, color='blue', marker='o', label='Данные')
+    plt.xlabel('Изменение уровня воды')
+    plt.ylabel('Поток воды через дамбу')
 
     # Для шага 4: добавьте отображение предсказанных значений для X
     if theta is not None:
@@ -182,33 +184,68 @@ def display_data(X, y, theta=None):
     # ---------------------------------
     plt.show()
 
+def sigmoid(z):
+    g = np.zeros(z.shape)
+    # ------ добавьте свой код --------
+    g = 1 / (1 + np.exp(-z))
+    # ---------------------------------
+    return g
 
-# Функция стоимости регуляризованной линейной регрессии
 def cost_function(theta, X, y, lamb):
     J = 0
     # ------ добавьте свой код --------
-    # ...
+    m = X.shape[0]
+    h = sigmoid(np.dot(X, theta))
+    # предотвращение h = 1 или h = 0
+    epsilon = 1e-10
+
+    h = np.clip(h, epsilon, 1 - epsilon)  # Ограничиваем предсказания
+
+    J = - 1 / m * np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) + (lamb / (2*m)) * np.sum(np.square(theta))
     # ---------------------------------
     return J
 
+# Функция градиента
 
-# Функция градиента регуляризованной линейной регрессии
 def gradient_function(theta, X, y, lamb):
     dth = np.zeros(theta.shape)
+    m = X.shape[0]
     # ------ добавьте свой код --------
-    # ...
+    h = sigmoid(np.dot(X, theta))
+    error = h - y
+    dth[0] = (1/m) * np.sum(error * X[:, 0])
+    for j in range(1, len(theta)):
+        dth[j] = (1 / m) * np.sum(error * X[:, j]) + (lamb / m) * theta[j]
     # ---------------------------------
-    return dth.flatten()
+    return dth.flatten()  # Функция minimize требует градиент в виде обычного массива
 
 
-# Построение кривых обучения
 def learning_curves(X, y, Xval, yval, lamb):
     m = y.shape[0]
+
     Jtrain = np.zeros(m)
+
     Jval = np.zeros(m)
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+
+    for i in range(1, m + 1):
+        # Используем подмножество для обучения
+
+        X_subset = X[:i]
+
+        y_subset = y[:i]
+
+        # Обучаем модель и получаем параметры theta
+
+        theta = train_model(X_subset, y_subset, lamb)
+
+        # Вычисляем стоимость на обучающей выборке
+
+        Jtrain[i - 1] = cost_function(theta, X_subset, y_subset, 0)  # lamb=0 для обучающей выборки
+
+        # Вычисляем стоимость на валидационной выборке
+
+        Jval[i - 1] = cost_function(theta, Xval, yval, lamb)
+
     return Jtrain, Jval
 
 
@@ -254,7 +291,7 @@ def train_model(X, y, lamb):
 
 
 if __name__ == '__main__':
-    plt.ion()
+    # plt.ion()
     main()
     input('Перейдите в терминал и нажмите Enter для завершения')
     plt.clf()
