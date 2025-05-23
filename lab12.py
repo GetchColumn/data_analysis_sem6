@@ -11,7 +11,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 2. Метод главных компонент
     Z, R = pca(Xn, 1)
@@ -22,7 +22,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 3. Восстановление данных
     Xr = reconstruct(Z, R)
@@ -32,7 +32,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 4. Применение PCA для набора данных лиц
     with open('ex7faces.npy', 'rb') as f:
@@ -47,7 +47,7 @@ def main():
     input('Перейдите в терминал и нажмите Enter для продолжения...')
 
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 5. Подбор значения k
     print('\nПодбор значения k для сохранения 99% дисперсии')
@@ -64,65 +64,133 @@ def main():
     ## Конец работы
 
 
+# # Отображение выборки
+# def draw_data(X, Xr=None):
+#     plt.figure()
+#     # ------ добавьте свой код --------
+#
+#     # Для шага 1
+#     plt.scatter(X[:, 0], X[:, 1], c='blue', label='Данные', alpha=0.7, edgecolors='k')
+#
+#     # Для шага 3
+#     if Xr is not None:
+#         pass
+#         # ...
+#
+#     plt.xlabel('Признак 1')
+#     plt.ylabel('Признак 2')
+#     plt.title('Отображение данных')
+#     plt.legend()
+#     plt.grid(True)
+#     # ---------------------------------
+#     plt.show()
 # Отображение выборки
 def draw_data(X, Xr=None):
     plt.figure()
-    # ------ добавьте свой код --------
-
-    # Для шага 1
-    # ...
-
-    # Для шага 3
+    plt.scatter(X[:, 0], X[:, 1], c='blue', label='Данные', alpha=0.7, edgecolors='k')
     if Xr is not None:
-        pass
-        # ...
-
+        # Отображаем восстановленные точки другим цветом
+        plt.scatter(Xr[:, 0], Xr[:, 1], c='red', label='Восстановленные', alpha=0.7, marker='x')
+    plt.xlabel('Признак 1')
+    plt.ylabel('Признак 2')
+    plt.title('Отображение данных')
     plt.legend()
-    # ---------------------------------
+    plt.grid(True)
     plt.show()
-
 
 # Нормализация данных
 def feature_normalize(X):
-    X_norm = X
-    mu = 0
-    sigma = 0
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    # Вычисляем среднее и стандартное отклонение по каждому признаку (столбцу)
+    mu = np.mean(X, axis=0)  # Вектор средних (размерность n)
+    sigma = np.std(X, axis=0, ddof=0)  # Вектор стандартных отклонений (размерность n)
+
+    # Нормализация: (X - mu) / sigma
+    # Добавляем небольшое значение к sigma, чтобы избежать деления на ноль
+    sigma_safe = sigma.copy()
+    sigma_safe[sigma_safe == 0] = 1.0
+
+    X_norm = (X - mu) / sigma_safe
+
     return X_norm, mu, sigma
 
 
 # Метод главных компонент
 def pca(X, k):
     m, n = X.shape
-    Z = np.zeros((m, k))
-    R = np.zeros((n, n))
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    # Центрируем данные
+    mu = np.mean(X, axis=0)
+    X_centered = X - mu
+
+    # Ковариационная матрица
+    Sigma = (X_centered.T @ X_centered) / m
+
+    # Собственные значения и векторы (или SVD)
+    # Используем SVD для численной устойчивости
+    U, S, Vt = np.linalg.svd(Sigma)
+    # U — столбцы это собственные векторы (размер n x n)
+
+    # Матрица понижения размерности (n x k)
+    R = U[:, :k]
+
+    # Проекция данных в новое пространство (m x k)
+    Z = X_centered @ R
+
     return Z, R
 
 
+# # Восстановление размерности
+# def reconstruct(Z, R):
+#     m, k = Z.shape
+#     n = R.shape[0]
+#     Xr = np.zeros((m, n))
+#     # ------ добавьте свой код --------
+#     # ...
+#     # ---------------------------------
+#     return Xr
+
 # Восстановление размерности
 def reconstruct(Z, R):
-    m, k = Z.shape
-    n = R.shape[0]
-    Xr = np.zeros((m, n))
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    # Z: (m, k), R: (n, k)
+    # Восстановление: Xr = Z @ R.T
+    Xr = Z @ R.T
     return Xr
 
 
-# Метод главных компонент
+# # Метод главных компонент
+# def pca_adaptive(X, threshold):
+#     m, n = X.shape
+#     Z = np.zeros(X.shape)
+#     R = np.zeros((n, n))
+#     # ------ добавьте свой код --------
+#     # ...
+#     # ---------------------------------
+#     return Z, R
 def pca_adaptive(X, threshold):
     m, n = X.shape
-    Z = np.zeros(X.shape)
-    R = np.zeros((n, n))
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    # Центрируем данные
+    mu = np.mean(X, axis=0)
+    X_centered = X - mu
+
+    # Ковариационная матрица
+    Sigma = (X_centered.T @ X_centered) / m
+
+    # SVD
+    U, S, Vt = np.linalg.svd(Sigma)
+    # S — вектор собственных значений (дисперсий по компонентам)
+
+    # Считаем долю сохранённой дисперсии для каждого k
+    total_variance = np.sum(S)
+    variance_ratio = np.cumsum(S) / total_variance
+
+    # Находим минимальное k, при котором сохраняется не менее threshold дисперсии
+    k = np.searchsorted(variance_ratio, threshold) + 1
+
+    # Матрица понижения размерности (n x k)
+    R = U[:, :k]
+
+    # Проекция данных (m x k)
+    Z = X_centered @ R
+
     return Z, R
 
 
@@ -141,7 +209,7 @@ def display_faces(X, height, width, el_height, el_width, title=None):
 
 
 if __name__ == '__main__':
-    plt.ion()
+    # plt.ion()
     main()
     input('Перейдите в терминал и нажмите Enter для завершения')
     plt.clf()
