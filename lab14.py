@@ -26,17 +26,17 @@ def main():
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 2. Нормализация рейтинга к нулевому среднему значению
     print('\nНормализация рейтинга к нулевому среднему значению')
     Ynorm, Ymean = normalize_ratings(Y, R)
-    print('Средняя оценка первого фильма ({}): {}'.format(movies[0], Ymean[0, 0]))
+    print('Средняя оценка первого фильма ({}): {}'.format(movies[0], Ymean[0]))
     print('Ожидаемое значение (приближенно): 3.88')
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 3. Функция стоимости коллаборативной фильтрации без регуляризации
     print('\nФункция стоимости коллаборативной фильтрации без регуляризации')
@@ -47,7 +47,7 @@ def main():
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 4. Градиент коллаборативной фильтрации без регуляризации
     print('\nГрадиент коллаборативной фильтрации без регуляризации')
@@ -58,7 +58,7 @@ def main():
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 5. Функция стоимости с регуляризацией
     print('\nФункция стоимости коллаборативной фильтрации с регуляризацией')
@@ -69,7 +69,7 @@ def main():
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 6. Градиент с регуляризацией
     print('\nГрадиент коллаборативной фильтрации с регуляризацией')
@@ -80,14 +80,14 @@ def main():
 
     input('Перейдите в терминал и нажмите Enter для продолжения...')
     # Удалите следующую строку для продолжения работы
-    return
+    # return
 
     ## 7. Обучение коллаборативной фильтрации
     print('\nОбучение коллаборативной фильтрации')
     lamb = 10
     Ynorm, Ymean = normalize_ratings(Y, R)
     X, Theta = cofi_train(Ynorm, R, num_users, num_movies, num_features, lamb)
-    pred = X @ Theta.T + Ymean
+    pred = X @ Theta.T + Ymean[:, np.newaxis]
     print('Рекомендуемые фильмы к просмотру для первого пользователя:')
     user_idx = 0
     rec_idx = np.argsort(-pred[R[:, user_idx] == 0, user_idx])[:10]
@@ -97,54 +97,108 @@ def main():
 
 
 # Нормализация рейтинга фильмов к нулевому среднему
+# def normalize_ratings(Y, R):
+#     Ynorm = np.zeros(Y.shape, dtype=float)
+#     Ymean = np.zeros(Y.shape[0], dtype=float)
+#     # ------ добавьте свой код --------
+#     # ...
+#     # ---------------------------------
+#     return Ynorm, Ymean
 def normalize_ratings(Y, R):
-    Ynorm = np.zeros(Y.shape, dtype=float)
-    Ymean = np.zeros(Y.shape[0], dtype=float)
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
+    num_movies = Y.shape[0]
+    Ymean = np.zeros(num_movies)
+    Ynorm = np.zeros_like(Y, dtype=float)
+    for i in range(num_movies):
+        idx = R[i, :] == 1
+        if np.any(idx):
+            Ymean[i] = np.mean(Y[i, idx])
+            Ynorm[i, idx] = Y[i, idx] - Ymean[i]
+        else:
+            Ymean[i] = 0
     return Ynorm, Ymean
 
-
 # Функция стоимости коллаборативной фильтрации
+# def cofi_cost(params, Y, R, num_users, num_movies, num_features, lamb):
+#     J = 0
+#     # ------ добавьте свой код --------
+#
+#     # Для шага 3 (без регуляризации)
+#     # ...
+#
+#     # Для шага 5 (с регуляризацией)
+#     # ...
+#
+#     # ---------------------------------
+#     return J
 def cofi_cost(params, Y, R, num_users, num_movies, num_features, lamb):
-    J = 0
-    # ------ добавьте свой код --------
-
-    # Для шага 3 (без регуляризации)
-    # ...
-
-    # Для шага 5 (с регуляризацией)
-    # ...
-
-    # ---------------------------------
+    # Восстановление X и Theta из params
+    X = params[:num_movies * num_features].reshape((num_movies, num_features))
+    Theta = params[num_movies * num_features:].reshape((num_users, num_features))
+    # Предсказания
+    pred = X @ Theta.T
+    # Ошибка только по тем, где R == 1
+    error = (pred - Y) * R
+    # Стоимость (без регуляризации)
+    J = 0.5 * np.sum(error ** 2)
+    J += (lamb / 2) * (np.sum(Theta ** 2) + np.sum(X ** 2))
+    # Регуляризация
     return J
 
-
 # Функция стоимости коллаборативной фильтрации
+# def cofi_gradient(params, Y, R, num_users, num_movies, num_features, lamb):
+#     grad = np.zeros(params.shape, dtype=float)
+#     # ------ добавьте свой код --------
+#
+#     # Для шага 4 (без регуляризации)
+#     # ...
+#
+#     # Для шага 6 (с регуляризацией)
+#     # ...
+#
+#     # ---------------------------------
+#     return grad
 def cofi_gradient(params, Y, R, num_users, num_movies, num_features, lamb):
-    grad = np.zeros(params.shape, dtype=float)
-    # ------ добавьте свой код --------
-
-    # Для шага 4 (без регуляризации)
-    # ...
-
-    # Для шага 6 (с регуляризацией)
-    # ...
-
-    # ---------------------------------
+    # Восстановление X и Theta из params
+    X = params[:num_movies * num_features].reshape((num_movies, num_features))
+    Theta = params[num_movies * num_features:].reshape((num_users, num_features))
+    # Ошибка только по тем, где R == 1
+    error = (X @ Theta.T - Y) * R
+    # Градиенты без регуляризации
+    X_grad = error @ Theta + lamb * X
+    Theta_grad = error.T @ X + lamb * Theta
+    # Объединяем в один вектор
+    grad = np.append(X_grad.flatten(), Theta_grad.flatten())
     return grad
 
 
 # Обучение коллаборативной фиьтрации
+# def cofi_train(Y, R, num_users, num_movies, num_features, lamb):
+#     X = np.zeros((num_users, num_features), dtype=float)
+#     Theta = np.zeros((num_movies, num_features), dtype=float)
+#     # ------ добавьте свой код --------
+#     # ...
+#     # ---------------------------------
+#     return X, Theta
 def cofi_train(Y, R, num_users, num_movies, num_features, lamb):
-    X = np.zeros((num_users, num_features), dtype=float)
-    Theta = np.zeros((num_movies, num_features), dtype=float)
-    # ------ добавьте свой код --------
-    # ...
-    # ---------------------------------
-    return X, Theta
+    # Случайная инициализация параметров
+    X_init = 0.01 * np.random.randn(num_movies, num_features)
+    Theta_init = 0.01 * np.random.randn(num_users, num_features)
+    params_init = np.append(X_init.flatten(), Theta_init.flatten())
 
+    # Определяем функцию стоимости и градиента
+    def cost_func(p):
+        return cofi_cost(p, Y, R, num_users, num_movies, num_features, lamb)
+    def grad_func(p):
+        return cofi_gradient(p, Y, R, num_users, num_movies, num_features, lamb)
+
+    # Минимизация
+    res = op.minimize(cost_func, params_init, jac=grad_func, method='TNC', options={'maxiter': 100})
+
+    # Восстановление X и Theta из результата
+    params_opt = res.x
+    X = params_opt[:num_movies * num_features].reshape((num_movies, num_features))
+    Theta = params_opt[num_movies * num_features:].reshape((num_users, num_features))
+    return X, Theta
 
 # Функция определения численного градиента (вам не нужно менять код этой функции)
 def numerical_gradient(J, theta):
