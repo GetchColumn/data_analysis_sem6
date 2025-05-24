@@ -191,18 +191,15 @@ def sigmoid(z):
     # ---------------------------------
     return g
 
+# линейная регрессия
 def cost_function(theta, X, y, lamb):
-    J = 0
-    # ------ добавьте свой код --------
     m = X.shape[0]
-    h = sigmoid(np.dot(X, theta))
-    # предотвращение h = 1 или h = 0
-    epsilon = 1e-10
-
-    h = np.clip(h, epsilon, 1 - epsilon)  # Ограничиваем предсказания
-
-    J = - 1 / m * np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) + (lamb / (2*m)) * np.sum(np.square(theta))
-    # ---------------------------------
+    h = X @ theta
+    error = h - y
+    J = (1 / (2 * m)) * np.sum(error ** 2)
+    # регуляризация (не включаем theta[0])
+    reg = (lamb / (2 * m)) * np.sum(theta[1:] ** 2)
+    J += reg
     return J
 
 # Функция градиента
